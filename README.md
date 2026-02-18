@@ -70,6 +70,8 @@ This project is suitable for:
 ## 👩‍💻 Developed By
 
 **Kavya Agrawal**  
+**Vidisha Gupta**
+**Praneetha Tanikella**
 Academic Project – Smart Systems & Digital Innovation
 
 ---
