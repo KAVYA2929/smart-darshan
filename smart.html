@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Darshan — Real-Time Pilgrimage Planning</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #FAFAF7;
+  --white: #FFFFFF;
+  --sage: #4A7C59;
+  --sage-light: #6B9E7A;
+  --sage-pale: #E8F2EC;
+  --teal: #2C6B7A;
+  --teal-light: #3D8FA0;
+  --teal-pale: #E4F2F5;
+  --gold: #C4963C;
+  --gold-pale: #FBF3E3;
+  --text-dark: #1A1F1C;
+  --text-mid: #4A5550;
+  --text-light: #8A9490;
+  --border: #E2E8E4;
+  --shadow: 0 4px 24px rgba(44,107,122,0.08);
+  --shadow-lg: 0 12px 48px rgba(44,107,122,0.14);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text-dark);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  background: rgba(250,250,247,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-logo {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--teal), var(--sage));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.nav-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: 0.02em;
+}
+.nav-links {
+  display: flex; gap: 4px; list-style: none;
+}
+.nav-links a {
+  display: block;
+  padding: 6px 14px;
+  border-radius: 8px;
+  color: var(--text-mid);
+  text-decoration: none;
+  font-size: 14px; font-weight: 500;
+  transition: all .2s;
+}
+.nav-links a:hover { background: var(--sage-pale); color: var(--sage); }
+.nav-links a.active { background: var(--teal); color: white; }
+.nav-cta {
+  background: var(--teal);
+  color: white; border: none;
+  padding: 8px 20px; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all .2s;
+}
+.nav-cta:hover { background: var(--teal-light); transform: translateY(-1px); }
+
+/* ── PAGE SYSTEM ── */
+.page { display: none; padding-top: 64px; min-height: 100vh; }
+.page.active { display: block; }
+
+/* ── HOME ── */
+.hero {
+  background: linear-gradient(160deg, #1A3A45 0%, #2C6B7A 45%, #3D7A5F 100%);
+  padding: 90px 40px 80px;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content:'';
+  position: absolute; inset:0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L60 30 L30 60 L0 30Z' fill='none' stroke='rgba(255,255,255,0.04)' stroke-width='1'/%3E%3C/svg%3E") repeat;
+  animation: patternShift 20s linear infinite;
+}
+@keyframes patternShift { to { background-position: 60px 60px; } }
+.hero-inner { max-width: 900px; margin: 0 auto; position: relative; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.9);
+  padding: 5px 14px; border-radius: 100px;
+  font-size: 13px; font-weight: 500; margin-bottom: 28px;
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #4eff91;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:1; transform: scale(1); }
+  50% { opacity:.5; transform: scale(.7); }
+}
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(42px, 6vw, 68px);
+  font-weight: 300; line-height: 1.1;
+  color: white; margin-bottom: 20px; letter-spacing: -0.02em;
+}
+.hero h1 span { font-weight: 700; color: #A8DFC0; }
+.hero-sub {
+  font-size: 17px; color: rgba(255,255,255,0.7);
+  max-width: 520px; margin-bottom: 40px; line-height: 1.7;
+}
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+.btn-primary {
+  background: white; color: var(--teal);
+  border: none; padding: 13px 28px;
+  border-radius: 10px; font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: all .25s; text-decoration: none; display: inline-block;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+.btn-outline {
+  background: transparent; color: white;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  padding: 13px 28px; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 500; cursor: pointer;
+  transition: all .25s; text-decoration: none; display: inline-block;
+}
+.btn-outline:hover { border-color: white; background: rgba(255,255,255,0.08); }
+
+/* Crowd Cards */
+.crowd-strip {
+  background: white;
+  padding: 28px 40px;
+  border-bottom: 1px solid var(--border);
+}
+.crowd-strip-inner { max-width: 1100px; margin: 0 auto; }
+.crowd-strip h3 {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--text-light); margin-bottom: 16px;
+}
+.crowd-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.crowd-card {
+  padding: 18px 20px; border-radius: 12px;
+  border: 1.5px solid var(--border);
+  display: flex; flex-direction: column; gap: 10px;
+  transition: all .2s; cursor: pointer;
+}
+.crowd-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.crowd-card-top { display: flex; justify-content: space-between; align-items: center; }
+.temple-name { font-weight: 600; font-size: 14px; }
+.crowd-badge {
+  padding: 3px 10px; border-radius: 100px;
+  font-size: 11px; font-weight: 600;
+}
+.low { background: #E6F7EE; color: #2D7A4F; }
+.medium { background: #FFF4E0; color: #A86500; }
+.high { background: #FDE8E8; color: #B91C1C; }
+.crowd-bar-wrap { height: 6px; background: #F0F0F0; border-radius: 4px; }
+.crowd-bar { height: 100%; border-radius: 4px; transition: width .6s ease; }
+.bar-low { background: #4CAF7D; width: 25%; }
+.bar-med { background: #F59E0B; width: 58%; }
+.bar-high { background: #EF4444; width: 87%; }
+.wait-time { font-size: 12px; color: var(--text-light); }
+
+/* Benefits */
+.section { padding: 72px 40px; }
+.section-inner { max-width: 1100px; margin: 0 auto; }
+.section-label {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--teal); margin-bottom: 12px;
+}
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(30px,4vw,44px); font-weight: 600;
+  color: var(--text-dark); line-height: 1.2; margin-bottom: 48px;
+}
+.benefits-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+.benefit-card {
+  background: white; border-radius: 16px;
+  padding: 32px 28px;
+  border: 1px solid var(--border);
+  transition: all .25s;
+}
+.benefit-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.benefit-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; margin-bottom: 20px;
+}
+.ic-teal { background: var(--teal-pale); }
+.ic-sage { background: var(--sage-pale); }
+.ic-gold { background: var(--gold-pale); }
+.benefit-card h4 { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+.benefit-card p { font-size: 14px; color: var(--text-mid); line-height: 1.65; }
+
+/* ── SLOT BOOKING ── */
+.page-header {
+  background: linear-gradient(135deg, var(--teal), var(--sage));
+  padding: 48px 40px 40px;
+  color: white;
+}
+.page-header h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px; font-weight: 600; margin-bottom: 8px;
+}
+.page-header p { color: rgba(255,255,255,0.75); font-size: 15px; }
+
+.booking-layout { display: grid; grid-template-columns: 280px 1fr; gap: 28px; padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
+
+.sidebar-panel {
+  background: white; border-radius: 16px;
+  border: 1px solid var(--border); padding: 24px;
+  height: fit-content; position: sticky; top: 80px;
+}
+.sidebar-panel h4 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing:.08em; color: var(--text-light); margin-bottom: 16px; }
+.temple-option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 10px;
+  cursor: pointer; transition: all .2s; margin-bottom: 6px;
+  border: 1.5px solid transparent;
+}
+.temple-option:hover { background: var(--teal-pale); }
+.temple-option.selected { border-color: var(--teal); background: var(--teal-pale); }
+.temple-icon { font-size: 20px; }
+.temple-info small { font-size: 11px; color: var(--text-light); display: block; }
+.temple-info strong { font-size: 14px; }
+
+.booking-main {}
+.booking-card { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 28px; margin-bottom: 20px; }
+.booking-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+.booking-card h3 .step-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--teal); color: white;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Calendar */
+.calendar { width: 100%; }
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.cal-header span { font-weight: 600; font-size: 15px; }
+.cal-nav { background: none; border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+.cal-day-label { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-light); padding: 6px; }
+.cal-day {
+  text-align: center; padding: 8px 4px;
+  border-radius: 8px; font-size: 13px;
+  cursor: pointer; transition: all .15s;
+  border: 1.5px solid transparent;
+}
+.cal-day:hover { background: var(--teal-pale); }
+.cal-day.selected { background: var(--teal); color: white; border-color: var(--teal); font-weight: 600; }
+.cal-day.today { border-color: var(--teal); color: var(--teal); font-weight: 600; }
+.cal-day.low-crowd { color: #2D7A4F; }
+.cal-day.med-crowd { color: #A86500; }
+.cal-day.high-crowd { color: #B91C1C; }
+.cal-day.empty { cursor: default; }
+.cal-legend { display: flex; gap: 14px; margin-top: 14px; font-size: 12px; color: var(--text-light); }
+.cal-legend span { display: flex; align-items: center; gap: 5px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* Time Slots */
+.time-slots { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+.time-slot {
+  padding: 12px 10px; border-radius: 10px;
+  border: 1.5px solid var(--border);
+  text-align: center; cursor: pointer;
+  transition: all .2s; font-size: 13px;
+}
+.time-slot:hover { border-color: var(--teal); background: var(--teal-pale); }
+.time-slot.selected { border-color: var(--teal); background: var(--teal); color: white; }
+.time-slot.full { background: #F8F8F8; color: var(--text-light); cursor: not-allowed; text-decoration: line-through; }
+.slot-avail { font-size: 10px; margin-top: 3px; opacity: .75; }
+
+/* Availability Bar */
+.avail-chart { display: flex; flex-direction: column; gap: 10px; }
+.avail-row { display: flex; align-items: center; gap: 12px; }
+.avail-label { font-size: 12px; color: var(--text-mid); width: 70px; flex-shrink: 0; }
+.avail-bar-wrap { flex:1; height: 10px; background: #F0F0F0; border-radius: 5px; overflow: hidden; }
+.avail-fill { height: 100%; border-radius: 5px; }
+.avail-val { font-size: 12px; font-weight: 600; width: 36px; text-align: right; }
+
+.book-btn {
+  background: linear-gradient(135deg, var(--teal), var(--sage));
+  color: white; border: none;
+  width: 100%; padding: 16px;
+  border-radius: 12px; font-family: 'DM Sans', sans-serif;
+  font-size: 16px; font-weight: 600; cursor: pointer;
+  transition: all .25s; letter-spacing: .01em;
+}
+.book-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(44,107,122,0.3); }
+
+/* ── CROWD PREDICTION ── */
+.pred-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
+.pred-card {
+  background: white; border-radius: 16px;
+  border: 1px solid var(--border); padding: 28px;
+}
+.pred-card.wide { grid-column: 1/-1; }
+.pred-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.pred-card .subtitle { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
+
+/* Chart SVG */
+.chart-wrap { overflow: hidden; }
+svg.chart { width: 100%; display: block; }
+.chart-bar { transition: opacity .2s; cursor: pointer; }
+.chart-bar:hover { opacity: .8; }
+
+/* Factor Cards */
+.factors-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.factor-card {
+  padding: 18px; border-radius: 12px;
+  background: var(--cream); border: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.factor-header { display: flex; justify-content: space-between; align-items: center; }
+.factor-icon { font-size: 20px; }
+.factor-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 100px; }
+.factor-card h5 { font-size: 14px; font-weight: 600; }
+.factor-card p { font-size: 12px; color: var(--text-mid); }
+.factor-impact { height: 4px; border-radius: 2px; background: #E8E8E8; }
+.impact-fill { height: 100%; border-radius: 2px; }
+
+/* Heatmap */
+.heatmap { display: grid; grid-template-columns: 48px repeat(7,1fr); gap: 4px; }
+.hm-header { font-size: 11px; font-weight: 600; color: var(--text-light); text-align: center; padding: 4px; }
+.hm-label { font-size: 11px; color: var(--text-light); display: flex; align-items: center; }
+.hm-cell {
+  height: 32px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; color: white; cursor: pointer;
+  transition: transform .15s;
+}
+.hm-cell:hover { transform: scale(1.08); }
+.hm-0 { background: #E8F5EE; color: #4A7C59; }
+.hm-1 { background: #c3e6cc; color: #2D5A3D; }
+.hm-2 { background: #4CAF7D; }
+.hm-3 { background: #F59E0B; }
+.hm-4 { background: #EF7C2A; }
+.hm-5 { background: #EF4444; }
+
+/* ── ADMIN DASHBOARD ── */
+.admin-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 64px); }
+.admin-sidebar {
+  background: #1A2E35; padding: 24px 16px;
+  position: sticky; top: 64px;
+  height: calc(100vh - 64px); overflow-y: auto;
+}
+.admin-sidebar-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; color: white; font-weight: 700;
+  padding: 0 8px 20px; border-bottom: 1px solid rgba(255,255,255,.1);
+  margin-bottom: 20px;
+}
+.admin-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  color: rgba(255,255,255,.6); font-size: 14px;
+  cursor: pointer; transition: all .2s; margin-bottom: 4px;
+}
+.admin-nav-item:hover, .admin-nav-item.active {
+  background: rgba(255,255,255,.1); color: white;
+}
+.admin-nav-item .icon { font-size: 16px; width: 20px; }
+
+.admin-main { padding: 28px; background: #F4F6F5; overflow-y: auto; }
+.admin-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.admin-topbar h2 { font-size: 22px; font-weight: 600; }
+
+.alert-banner {
+  background: linear-gradient(135deg, #7F1D1D, #B91C1C);
+  color: white; border-radius: 12px;
+  padding: 14px 20px; margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.alert-left { display: flex; align-items: center; gap: 10px; }
+.alert-icon { font-size: 18px; animation: alertPulse 1s ease-in-out infinite; }
+@keyframes alertPulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.alert-text strong { display: block; font-size: 14px; font-weight: 600; }
+.alert-text span { font-size: 12px; opacity:.8; }
+.alert-dismiss { background: rgba(255,255,255,.2); border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: white; border-radius: 14px;
+  padding: 20px 22px; border: 1px solid var(--border);
+}
+.stat-card .stat-label { font-size: 12px; color: var(--text-light); font-weight: 500; margin-bottom: 8px; }
+.stat-card .stat-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 8px; }
+.stat-card .stat-change { font-size: 12px; font-weight: 500; }
+.change-up { color: #2D7A4F; }
+.change-down { color: #B91C1C; }
+
+.admin-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; margin-bottom: 20px; }
+.admin-card {
+  background: white; border-radius: 14px;
+  border: 1px solid var(--border); padding: 24px;
+}
+.admin-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 18px; display:flex; justify-content: space-between; align-items: center; }
+.admin-card h3 span { font-size: 12px; color: var(--teal); cursor: pointer; font-weight: 500; }
+
+.slot-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.slot-ctrl {
+  background: var(--cream); border-radius: 10px;
+  padding: 16px; border: 1px solid var(--border);
+}
+.slot-ctrl label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing:.06em; color: var(--text-light); display: block; margin-bottom: 8px; }
+.slot-ctrl select, .slot-ctrl input {
+  width: 100%; padding: 8px 10px; border-radius: 8px;
+  border: 1.5px solid var(--border); font-family: 'DM Sans', sans-serif;
+  font-size: 13px; background: white;
+}
+.slot-ctrl-actions { grid-column: 1/-1; display: flex; gap: 10px; }
+.btn-sm {
+  padding: 9px 18px; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: none; transition: all .2s;
+}
+.btn-sm.primary { background: var(--teal); color: white; }
+.btn-sm.danger { background: #FDE8E8; color: #B91C1C; }
+.btn-sm:hover { opacity: .85; transform: translateY(-1px); }
+
+/* Donut chart */
+.donut-wrap { display: flex; align-items: center; gap: 24px; }
+.donut-legend { display: flex; flex-direction: column; gap: 10px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink:0; }
+
+/* Booking table */
+.booking-table { width: 100%; border-collapse: collapse; }
+.booking-table th {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-light);
+  text-align: left; padding: 0 12px 12px; border-bottom: 1px solid var(--border);
+}
+.booking-table td { padding: 12px; font-size: 13px; border-bottom: 1px solid #F5F5F5; }
+.booking-table tr:last-child td { border: none; }
+.status-pill { padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+.s-confirmed { background: #E6F7EE; color: #2D7A4F; }
+.s-pending { background: #FFF4E0; color: #A86500; }
+.s-cancelled { background: #FDE8E8; color: #B91C1C; }
+
+/* ── CONFIRMATION ── */
+.confirm-page { padding: 48px 40px; background: var(--cream); min-height: calc(100vh - 64px); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.confirm-card { background: white; border-radius: 20px; border: 1px solid var(--border); padding: 48px; max-width: 520px; width: 100%; text-align: center; box-shadow: var(--shadow-lg); }
+.confirm-icon { font-size: 48px; margin-bottom: 20px; }
+.confirm-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #E6F7EE; color: #2D7A4F;
+  padding: 6px 16px; border-radius: 100px;
+  font-size: 13px; font-weight: 600; margin-bottom: 24px;
+}
+.confirm-card h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 34px; font-weight: 700; margin-bottom: 8px;
+}
+.confirm-card .booking-id {
+  font-size: 13px; color: var(--text-light); margin-bottom: 32px;
+}
+.confirm-card .booking-id strong { color: var(--teal); }
+
+.qr-box {
+  width: 140px; height: 140px; margin: 0 auto 32px;
+  border: 2px solid var(--border); border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: #FAFAFA;
+}
+.qr-inner {
+  width: 110px; height: 110px;
+  background:
+    repeating-conic-gradient(var(--text-dark) 0% 25%, white 0% 50%) 0 0/20px 20px,
+    repeating-conic-gradient(var(--text-dark) 0% 25%, white 0% 50%) 10px 10px/20px 20px;
+  border-radius: 4px;
+  opacity: .8;
+}
+
+.details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+.detail-item { background: var(--cream); border-radius: 10px; padding: 14px; text-align: left; }
+.detail-item label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing:.07em; color: var(--text-light); display: block; margin-bottom: 4px; }
+.detail-item span { font-size: 14px; font-weight: 600; color: var(--text-dark); }
+
+.instructions { text-align: left; background: var(--teal-pale); border-radius: 12px; padding: 18px; margin-bottom: 28px; border-left: 3px solid var(--teal); }
+.instructions h4 { font-size: 13px; font-weight: 600; color: var(--teal); margin-bottom: 10px; }
+.instructions ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.instructions li { font-size: 13px; color: var(--text-mid); display: flex; align-items: flex-start; gap: 6px; }
+.instructions li::before { content: '✓'; color: var(--teal); font-weight: 700; flex-shrink:0; }
+
+.confirm-actions { display: flex; gap: 12px; }
+.confirm-actions .btn-primary, .confirm-actions .btn-sec {
+  flex:1; padding: 13px; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  border: none; transition: all .2s;
+}
+.confirm-actions .btn-primary { background: var(--teal); color: white; }
+.confirm-actions .btn-sec { background: var(--cream); color: var(--text-mid); border: 1.5px solid var(--border); }
+
+/* ── RESPONSIVE NAV ── */
+@media (max-width: 768px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .booking-layout { grid-template-columns: 1fr; }
+  .pred-grid { grid-template-columns: 1fr; }
+  .benefits-grid { grid-template-columns: 1fr; }
+  .crowd-cards { grid-template-columns: 1fr 1fr; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .admin-layout { grid-template-columns: 1fr; }
+  .admin-sidebar { display: none; }
+  .time-slots { grid-template-columns: repeat(3,1fr); }
+}
+
+/* Tooltip */
+.tooltip-hint { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 4px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">🛕</div>
+    <span class="nav-title">Smart Darshan</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#" class="active" onclick="showPage('home',this)">Home</a></li>
+    <li><a href="#" onclick="showPage('booking',this)">Book Slot</a></li>
+    <li><a href="#" onclick="showPage('crowd',this)">Crowd Forecast</a></li>
+    <li><a href="#" onclick="showPage('admin',this)">Admin</a></li>
+  </ul>
+  <button class="nav-cta" onclick="showPage('booking',null)">Book Darshan →</button>
+</nav>
+
+<!-- ══════════════ HOME ══════════════ -->
+<div id="home" class="page active">
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge"><span class="live-dot"></span> Live crowd data active</div>
+      <h1>Darshan, <span>planned</span><br>with wisdom.</h1>
+      <p class="hero-sub">Skip the queues. Choose your moment. Our AI-powered platform predicts temple crowds in real time so your pilgrimage stays peaceful and meaningful.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn-primary" onclick="showPage('booking',null)">Book a Slot</a>
+        <a href="#" class="btn-outline" onclick="showPage('crowd',null)">View Crowd Forecast</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CROWD STRIP -->
+  <div class="crowd-strip">
+    <div class="crowd-strip-inner">
+      <h3>🔴 Live Crowd Status — Major Temples</h3>
+      <div class="crowd-cards">
+        <div class="crowd-card">
+          <div class="crowd-card-top">
+            <span class="temple-name">Tirupati</span>
+            <span class="crowd-badge high">High</span>
+          </div>
+          <div class="crowd-bar-wrap"><div class="crowd-bar bar-high"></div></div>
+          <div class="wait-time">Est. wait: ~3.5 hrs &nbsp;·&nbsp; 12,400 visitors</div>
+        </div>
+        <div class="crowd-card">
+          <div class="crowd-card-top">
+            <span class="temple-name">Vaishno Devi</span>
+            <span class="crowd-badge medium">Medium</span>
+          </div>
+          <div class="crowd-bar-wrap"><div class="crowd-bar bar-med"></div></div>
+          <div class="wait-time">Est. wait: ~1.5 hrs &nbsp;·&nbsp; 5,800 visitors</div>
+        </div>
+        <div class="crowd-card">
+          <div class="crowd-card-top">
+            <span class="temple-name">Siddhivinayak</span>
+            <span class="crowd-badge low">Low</span>
+          </div>
+          <div class="crowd-bar-wrap"><div class="crowd-bar bar-low"></div></div>
+          <div class="wait-time">Est. wait: ~20 min &nbsp;·&nbsp; 1,100 visitors</div>
+        </div>
+        <div class="crowd-card">
+          <div class="crowd-card-top">
+            <span class="temple-name">Golden Temple</span>
+            <span class="crowd-badge medium">Medium</span>
+          </div>
+          <div class="crowd-bar-wrap"><div class="crowd-bar bar-med" style="width:48%"></div></div>
+          <div class="wait-time">Est. wait: ~55 min &nbsp;·&nbsp; 4,200 visitors</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BENEFITS -->
+  <div class="section">
+    <div class="section-inner">
+      <div class="section-label">Why Smart Darshan</div>
+      <div class="section-title">Your devotion, our<br>intelligent support.</div>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon ic-teal">📅</div>
+          <h4>Advance Slot Booking</h4>
+          <p>Reserve your darshan window days in advance. No standing in lines for hours — arrive, enter, experience.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon ic-sage">📊</div>
+          <h4>AI Crowd Prediction</h4>
+          <p>Our model factors festivals, weather, and historical patterns to forecast crowd levels with high accuracy.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon ic-gold">🔔</div>
+          <h4>Smart Alerts</h4>
+          <p>Get notified if your chosen slot becomes overcrowded. We suggest better alternatives instantly.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon ic-teal">📱</div>
+          <h4>QR Entry Pass</h4>
+          <p>Your booking generates a unique QR code. Show at entry — no printouts or paperwork needed.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon ic-sage">🗺️</div>
+          <h4>Temple Guide</h4>
+          <p>Access dress codes, entry rules, ritual timings, and facilities for each temple in one place.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon ic-gold">🌿</div>
+          <h4>Crowd Reduction</h4>
+          <p>Distributing pilgrims evenly across time slots protects the spiritual ambience and safety of everyone.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SLOT BOOKING ══════════════ -->
+<div id="booking" class="page">
+  <div class="page-header">
+    <h2>Book Your Darshan Slot</h2>
+    <p>Choose temple → Select date → Pick time → Confirm</p>
+  </div>
+
+  <div class="booking-layout">
+    <!-- Sidebar -->
+    <div class="sidebar-panel">
+      <h4>Select Temple</h4>
+      <div class="temple-option selected" onclick="selectTemple(this)">
+        <span class="temple-icon">🛕</span>
+        <div class="temple-info">
+          <strong>Tirupati Balaji</strong>
+          <small>Tirupati, Andhra Pradesh</small>
+        </div>
+      </div>
+      <div class="temple-option" onclick="selectTemple(this)">
+        <span class="temple-icon">⛰️</span>
+        <div class="temple-info">
+          <strong>Vaishno Devi</strong>
+          <small>Katra, Jammu</small>
+        </div>
+      </div>
+      <div class="temple-option" onclick="selectTemple(this)">
+        <span class="temple-icon">🐘</span>
+        <div class="temple-info">
+          <strong>Siddhivinayak</strong>
+          <small>Mumbai, Maharashtra</small>
+        </div>
+      </div>
+      <div class="temple-option" onclick="selectTemple(this)">
+        <span class="temple-icon">✨</span>
+        <div class="temple-info">
+          <strong>Golden Temple</strong>
+          <small>Amritsar, Punjab</small>
+        </div>
+      </div>
+      <div class="temple-option" onclick="selectTemple(this)">
+        <span class="temple-icon">🌊</span>
+        <div class="temple-info">
+          <strong>Somnath</strong>
+          <small>Veraval, Gujarat</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Booking -->
+    <div class="booking-main">
+      <!-- Calendar -->
+      <div class="booking-card">
+        <h3><span class="step-num">1</span> Choose Date</h3>
+        <div class="calendar">
+          <div class="cal-header">
+            <button class="cal-nav">‹</button>
+            <span>February 2026</span>
+            <button class="cal-nav">›</button>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day-label">Su</div><div class="cal-day-label">Mo</div><div class="cal-day-label">Tu</div><div class="cal-day-label">We</div><div class="cal-day-label">Th</div><div class="cal-day-label">Fr</div><div class="cal-day-label">Sa</div>
+            <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day low-crowd" onclick="selectDay(this)">1</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">2</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">3</div>
+            <div class="cal-day med-crowd" onclick="selectDay(this)">4</div>
+            <div class="cal-day med-crowd" onclick="selectDay(this)">5</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">6</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">7</div>
+            <div class="cal-day high-crowd" onclick="selectDay(this)">8</div>
+            <div class="cal-day med-crowd" onclick="selectDay(this)">9</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">10</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">11</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">12</div>
+            <div class="cal-day med-crowd" onclick="selectDay(this)">13</div>
+            <div class="cal-day med-crowd" onclick="selectDay(this)">14</div>
+            <div class="cal-day high-crowd" onclick="selectDay(this)">15</div>
+            <div class="cal-day high-crowd" onclick="selectDay(this)">16</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">17</div>
+            <div class="cal-day today" onclick="selectDay(this)">18</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">19</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">20</div>
+            <div class="cal-day med-crowd" onclick="selectDay(this)">21</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">22</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">23</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">24</div>
+            <div class="cal-day high-crowd" onclick="selectDay(this)">25</div>
+            <div class="cal-day med-crowd" onclick="selectDay(this)">26</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">27</div>
+            <div class="cal-day low-crowd" onclick="selectDay(this)">28</div>
+          </div>
+          <div class="cal-legend">
+            <span><span class="dot" style="background:#4CAF7D"></span> Low crowd</span>
+            <span><span class="dot" style="background:#F59E0B"></span> Medium</span>
+            <span><span class="dot" style="background:#EF4444"></span> High crowd</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Slots -->
+      <div class="booking-card">
+        <h3><span class="step-num">2</span> Choose Time Slot</h3>
+        <div class="time-slots">
+          <div class="time-slot" onclick="selectSlot(this)"><div>5:30 AM</div><div class="slot-avail" style="color:#2D7A4F">48 left</div></div>
+          <div class="time-slot" onclick="selectSlot(this)"><div>7:00 AM</div><div class="slot-avail" style="color:#2D7A4F">31 left</div></div>
+          <div class="time-slot" onclick="selectSlot(this)"><div>8:30 AM</div><div class="slot-avail" style="color:#A86500">12 left</div></div>
+          <div class="time-slot full"><div>10:00 AM</div><div class="slot-avail">Full</div></div>
+          <div class="time-slot full"><div>11:30 AM</div><div class="slot-avail">Full</div></div>
+          <div class="time-slot" onclick="selectSlot(this)"><div>1:00 PM</div><div class="slot-avail" style="color:#2D7A4F">60 left</div></div>
+          <div class="time-slot" onclick="selectSlot(this)"><div>2:30 PM</div><div class="slot-avail" style="color:#2D7A4F">55 left</div></div>
+          <div class="time-slot" onclick="selectSlot(this)"><div>4:00 PM</div><div class="slot-avail" style="color:#A86500">9 left</div></div>
+          <div class="time-slot" onclick="selectSlot(this)"><div>5:30 PM</div><div class="slot-avail" style="color:#2D7A4F">40 left</div></div>
+          <div class="time-slot" onclick="selectSlot(this)"><div>7:00 PM</div><div class="slot-avail" style="color:#2D7A4F">52 left</div></div>
+          <div class="time-slot full"><div>8:30 PM</div><div class="slot-avail">Full</div></div>
+          <div class="time-slot" onclick="selectSlot(this)"><div>9:30 PM</div><div class="slot-avail" style="color:#2D7A4F">72 left</div></div>
+        </div>
+        <div class="tooltip-hint">💡 Early morning & late evening slots have minimal wait times</div>
+      </div>
+
+      <!-- Slot Availability Chart -->
+      <div class="booking-card">
+        <h3><span class="step-num">3</span> Slot Availability Overview</h3>
+        <div class="avail-chart">
+          <div class="avail-row"><span class="avail-label">5:30 AM</span><div class="avail-bar-wrap"><div class="avail-fill" style="width:15%;background:#4CAF7D"></div></div><span class="avail-val" style="color:#2D7A4F">15%</span></div>
+          <div class="avail-row"><span class="avail-label">7:00 AM</span><div class="avail-bar-wrap"><div class="avail-fill" style="width:38%;background:#4CAF7D"></div></div><span class="avail-val" style="color:#2D7A4F">38%</span></div>
+          <div class="avail-row"><span class="avail-label">8:30 AM</span><div class="avail-bar-wrap"><div class="avail-fill" style="width:70%;background:#F59E0B"></div></div><span class="avail-val" style="color:#A86500">70%</span></div>
+          <div class="avail-row"><span class="avail-label">10:00 AM</span><div class="avail-bar-wrap"><div class="avail-fill" style="width:100%;background:#EF4444"></div></div><span class="avail-val" style="color:#B91C1C">Full</span></div>
+          <div class="avail-row"><span class="avail-label">1:00 PM</span><div class="avail-bar-wrap"><div class="avail-fill" style="width:22%;background:#4CAF7D"></div></div><span class="avail-val" style="color:#2D7A4F">22%</span></div>
+          <div class="avail-row"><span class="avail-label">5:30 PM</span><div class="avail-bar-wrap"><div class="avail-fill" style="width:45%;background:#F59E0B"></div></div><span class="avail-val" style="color:#A86500">45%</span></div>
+          <div class="avail-row"><span class="avail-label">9:30 PM</span><div class="avail-bar-wrap"><div class="avail-fill" style="width:10%;background:#4CAF7D"></div></div><span class="avail-val" style="color:#2D7A4F">10%</span></div>
+        </div>
+      </div>
+
+      <button class="book-btn" onclick="showPage('confirm',null)">Confirm Darshan Booking →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CROWD PREDICTION ══════════════ -->
+<div id="crowd" class="page">
+  <div class="page-header">
+    <h2>Crowd Prediction & Forecast</h2>
+    <p>AI-powered crowd level predictions for the next 7 days</p>
+  </div>
+
+  <div class="pred-grid">
+    <!-- Hourly Bar Chart -->
+    <div class="pred-card wide">
+      <h3>Hourly Crowd Forecast — Today (Feb 18)</h3>
+      <p class="subtitle">Expected visitor count at Tirupati Balaji throughout the day</p>
+      <div class="chart-wrap">
+        <svg class="chart" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- Grid lines -->
+          <line x1="40" y1="10" x2="40" y2="165" stroke="#E8E8E8" stroke-width="1"/>
+          <line x1="40" y1="50" x2="700" y2="50" stroke="#F0F0F0" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="40" y1="90" x2="700" y2="90" stroke="#F0F0F0" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="40" y1="130" x2="700" y2="130" stroke="#F0F0F0" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="40" y1="165" x2="700" y2="165" stroke="#E0E0E0" stroke-width="1"/>
+          <!-- Y Labels -->
+          <text x="35" y="53" text-anchor="end" font-size="10" fill="#9AA">10k</text>
+          <text x="35" y="93" text-anchor="end" font-size="10" fill="#9AA">6k</text>
+          <text x="35" y="133" text-anchor="end" font-size="10" fill="#9AA">3k</text>
+          <!-- Bars -->
+          <rect class="chart-bar" x="50" y="148" width="28" height="17" rx="3" fill="#4CAF7D" opacity=".85"/>
+          <rect class="chart-bar" x="95" y="140" width="28" height="25" rx="3" fill="#4CAF7D" opacity=".85"/>
+          <rect class="chart-bar" x="140" y="118" width="28" height="47" rx="3" fill="#F59E0B" opacity=".85"/>
+          <rect class="chart-bar" x="185" y="88" width="28" height="77" rx="3" fill="#F59E0B" opacity=".85"/>
+          <rect class="chart-bar" x="230" y="32" width="28" height="133" rx="3" fill="#EF4444" opacity=".85"/>
+          <rect class="chart-bar" x="275" y="22" width="28" height="143" rx="3" fill="#EF4444" opacity=".85"/>
+          <rect class="chart-bar" x="320" y="40" width="28" height="125" rx="3" fill="#EF4444" opacity=".85"/>
+          <rect class="chart-bar" x="365" y="60" width="28" height="105" rx="3" fill="#F59E0B" opacity=".85"/>
+          <rect class="chart-bar" x="410" y="50" width="28" height="115" rx="3" fill="#EF4444" opacity=".85"/>
+          <rect class="chart-bar" x="455" y="75" width="28" height="90" rx="3" fill="#F59E0B" opacity=".85"/>
+          <rect class="chart-bar" x="500" y="110" width="28" height="55" rx="3" fill="#F59E0B" opacity=".85"/>
+          <rect class="chart-bar" x="545" y="130" width="28" height="35" rx="3" fill="#4CAF7D" opacity=".85"/>
+          <rect class="chart-bar" x="590" y="145" width="28" height="20" rx="3" fill="#4CAF7D" opacity=".85"/>
+          <rect class="chart-bar" x="635" y="148" width="28" height="17" rx="3" fill="#4CAF7D" opacity=".85"/>
+          <!-- X Labels -->
+          <text x="64" y="180" text-anchor="middle" font-size="9" fill="#9AA">5AM</text>
+          <text x="109" y="180" text-anchor="middle" font-size="9" fill="#9AA">7AM</text>
+          <text x="154" y="180" text-anchor="middle" font-size="9" fill="#9AA">9AM</text>
+          <text x="199" y="180" text-anchor="middle" font-size="9" fill="#9AA">11AM</text>
+          <text x="244" y="180" text-anchor="middle" font-size="9" fill="#9AA">1PM</text>
+          <text x="289" y="180" text-anchor="middle" font-size="9" fill="#9AA">2PM</text>
+          <text x="334" y="180" text-anchor="middle" font-size="9" fill="#9AA">3PM</text>
+          <text x="379" y="180" text-anchor="middle" font-size="9" fill="#9AA">4PM</text>
+          <text x="424" y="180" text-anchor="middle" font-size="9" fill="#9AA">5PM</text>
+          <text x="469" y="180" text-anchor="middle" font-size="9" fill="#9AA">6PM</text>
+          <text x="514" y="180" text-anchor="middle" font-size="9" fill="#9AA">7PM</text>
+          <text x="559" y="180" text-anchor="middle" font-size="9" fill="#9AA">8PM</text>
+          <text x="604" y="180" text-anchor="middle" font-size="9" fill="#9AA">9PM</text>
+          <text x="649" y="180" text-anchor="middle" font-size="9" fill="#9AA">10PM</text>
+        </svg>
+      </div>
+      <div class="cal-legend" style="margin-top:4px">
+        <span><span class="dot" style="background:#4CAF7D"></span> Low (&lt;3k)</span>
+        <span><span class="dot" style="background:#F59E0B"></span> Medium (3k–7k)</span>
+        <span><span class="dot" style="background:#EF4444"></span> Peak (&gt;7k)</span>
+        <span style="margin-left:auto;font-style:italic;color:#888">Best slots: 5–7 AM and 9–10 PM</span>
+      </div>
+    </div>
+
+    <!-- Weekly Trend -->
+    <div class="pred-card">
+      <h3>7-Day Crowd Trend</h3>
+      <p class="subtitle">Daily average crowd index</p>
+      <svg class="chart" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2C6B7A" stop-opacity=".25"/>
+            <stop offset="100%" stop-color="#2C6B7A" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="30" y1="20" x2="30" y2="145" stroke="#E8E8E8"/>
+        <line x1="30" y1="145" x2="320" y2="145" stroke="#E8E8E8"/>
+        <path d="M42,120 L87,100 L132,60 L177,40 L222,80 L267,95 L312,110" fill="none" stroke="#2C6B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M42,120 L87,100 L132,60 L177,40 L222,80 L267,95 L312,110 L312,145 L42,145Z" fill="url(#lineGrad)"/>
+        <circle cx="42" cy="120" r="4" fill="#2C6B7A"/>
+        <circle cx="87" cy="100" r="4" fill="#2C6B7A"/>
+        <circle cx="132" cy="60" r="4" fill="#EF4444"/>
+        <circle cx="177" cy="40" r="6" fill="#EF4444" stroke="white" stroke-width="2"/>
+        <circle cx="222" cy="80" r="4" fill="#F59E0B"/>
+        <circle cx="267" cy="95" r="4" fill="#2C6B7A"/>
+        <circle cx="312" cy="110" r="4" fill="#2C6B7A"/>
+        <text x="42" y="162" text-anchor="middle" font-size="9" fill="#9AA">Wed</text>
+        <text x="87" y="162" text-anchor="middle" font-size="9" fill="#9AA">Thu</text>
+        <text x="132" y="162" text-anchor="middle" font-size="9" fill="#9AA">Fri</text>
+        <text x="177" y="162" text-anchor="middle" font-size="9" fill="#9AA">Sat</text>
+        <text x="222" y="162" text-anchor="middle" font-size="9" fill="#9AA">Sun</text>
+        <text x="267" y="162" text-anchor="middle" font-size="9" fill="#9AA">Mon</text>
+        <text x="312" y="162" text-anchor="middle" font-size="9" fill="#9AA">Tue</text>
+        <text x="177" y="30" text-anchor="middle" font-size="9" fill="#B91C1C" font-weight="600">Peak</text>
+      </svg>
+    </div>
+
+    <!-- Factors -->
+    <div class="pred-card">
+      <h3>Crowd Influence Factors</h3>
+      <p class="subtitle">Key variables affecting crowd levels</p>
+      <div class="factors-grid">
+        <div class="factor-card">
+          <div class="factor-header">
+            <span class="factor-icon">🎉</span>
+            <span class="factor-badge high" style="background:#FDE8E8;color:#B91C1C">+85%</span>
+          </div>
+          <h5>Festival Days</h5>
+          <p>Diwali, Navratri, Ekadashi cause massive surges</p>
+          <div class="factor-impact"><div class="impact-fill" style="width:85%;background:#EF4444"></div></div>
+        </div>
+        <div class="factor-card">
+          <div class="factor-header">
+            <span class="factor-icon">📅</span>
+            <span class="factor-badge medium" style="background:#FFF4E0;color:#A86500">+52%</span>
+          </div>
+          <h5>Weekends</h5>
+          <p>Saturday & Sunday see significantly higher footfall</p>
+          <div class="factor-impact"><div class="impact-fill" style="width:52%;background:#F59E0B"></div></div>
+        </div>
+        <div class="factor-card">
+          <div class="factor-header">
+            <span class="factor-icon">☀️</span>
+            <span class="factor-badge low" style="background:#E6F7EE;color:#2D7A4F">+18%</span>
+          </div>
+          <h5>Weather</h5>
+          <p>Clear, mild weather draws more visitors outdoors</p>
+          <div class="factor-impact"><div class="impact-fill" style="width:18%;background:#4CAF7D"></div></div>
+        </div>
+        <div class="factor-card">
+          <div class="factor-header">
+            <span class="factor-icon">🗓️</span>
+            <span class="factor-badge medium" style="background:#FFF4E0;color:#A86500">+35%</span>
+          </div>
+          <h5>School Holidays</h5>
+          <p>Summer and winter vacations raise family visits</p>
+          <div class="factor-impact"><div class="impact-fill" style="width:35%;background:#F59E0B"></div></div>
+        </div>
+        <div class="factor-card">
+          <div class="factor-header">
+            <span class="factor-icon">🌙</span>
+            <span class="factor-badge high" style="background:#FDE8E8;color:#B91C1C">+70%</span>
+          </div>
+          <h5>Auspicious Days</h5>
+          <p>Amavasya, Purnima spike devotee count sharply</p>
+          <div class="factor-impact"><div class="impact-fill" style="width:70%;background:#EF4444"></div></div>
+        </div>
+        <div class="factor-card">
+          <div class="factor-header">
+            <span class="factor-icon">🚌</span>
+            <span class="factor-badge low" style="background:#E6F7EE;color:#2D7A4F">+22%</span>
+          </div>
+          <h5>Transport</h5>
+          <p>New bus/train routes or special yatra packages</p>
+          <div class="factor-impact"><div class="impact-fill" style="width:22%;background:#4CAF7D"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="pred-card wide">
+      <h3>Weekly Crowd Heatmap</h3>
+      <p class="subtitle">Crowd intensity by day and time — darker = more crowded</p>
+      <div class="heatmap">
+        <div></div>
+        <div class="hm-header">Mon</div><div class="hm-header">Tue</div><div class="hm-header">Wed</div><div class="hm-header">Thu</div><div class="hm-header">Fri</div><div class="hm-header">Sat</div><div class="hm-header">Sun</div>
+        <div class="hm-label">5–7 AM</div>
+        <div class="hm-cell hm-1">1</div><div class="hm-cell hm-1">1</div><div class="hm-cell hm-0">0</div><div class="hm-cell hm-1">1</div><div class="hm-cell hm-1">1</div><div class="hm-cell hm-2">2</div><div class="hm-cell hm-2">2</div>
+        <div class="hm-label">8–10 AM</div>
+        <div class="hm-cell hm-3">3</div><div class="hm-cell hm-2">2</div><div class="hm-cell hm-3">3</div><div class="hm-cell hm-3">3</div><div class="hm-cell hm-3">3</div><div class="hm-cell hm-4">4</div><div class="hm-cell hm-5">5</div>
+        <div class="hm-label">11–1 PM</div>
+        <div class="hm-cell hm-4">4</div><div class="hm-cell hm-4">4</div><div class="hm-cell hm-5">5</div><div class="hm-cell hm-4">4</div><div class="hm-cell hm-4">4</div><div class="hm-cell hm-5">5</div><div class="hm-cell hm-5">5</div>
+        <div class="hm-label">2–4 PM</div>
+        <div class="hm-cell hm-3">3</div><div class="hm-cell hm-3">3</div><div class="hm-cell hm-4">4</div><div class="hm-cell hm-3">3</div><div class="hm-cell hm-4">4</div><div class="hm-cell hm-5">5</div><div class="hm-cell hm-5">5</div>
+        <div class="hm-label">5–7 PM</div>
+        <div class="hm-cell hm-4">4</div><div class="hm-cell hm-3">3</div><div class="hm-cell hm-3">3</div><div class="hm-cell hm-4">4</div><div class="hm-cell hm-5">5</div><div class="hm-cell hm-5">5</div><div class="hm-cell hm-5">5</div>
+        <div class="hm-label">8–10 PM</div>
+        <div class="hm-cell hm-2">2</div><div class="hm-cell hm-1">1</div><div class="hm-cell hm-2">2</div><div class="hm-cell hm-2">2</div><div class="hm-cell hm-2">2</div><div class="hm-cell hm-3">3</div><div class="hm-cell hm-3">3</div>
+      </div>
+      <div class="cal-legend" style="margin-top:14px">
+        <span style="font-size:11px;color:#888">0 = Empty &nbsp;→&nbsp; 5 = Extremely crowded</span>
+        <span style="margin-left:auto;font-style:italic;font-size:11px;color:#2D7A4F">💡 Mon–Wed early morning: best time to visit</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ADMIN ══════════════ -->
+<div id="admin" class="page">
+  <div class="admin-layout">
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-brand">🛕 Admin Panel</div>
+      <div class="admin-nav-item active"><span class="icon">📊</span> Dashboard</div>
+      <div class="admin-nav-item"><span class="icon">📅</span> Slot Management</div>
+      <div class="admin-nav-item"><span class="icon">👥</span> Bookings</div>
+      <div class="admin-nav-item"><span class="icon">🔔</span> Alerts</div>
+      <div class="admin-nav-item"><span class="icon">🛕</span> Temples</div>
+      <div class="admin-nav-item"><span class="icon">📈</span> Reports</div>
+      <div class="admin-nav-item"><span class="icon">⚙️</span> Settings</div>
+    </div>
+
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <h2>Overview Dashboard</h2>
+        <span style="font-size:13px;color:var(--text-light)">Feb 18, 2026 &nbsp;·&nbsp; Live data</span>
+      </div>
+
+      <!-- Alert Banner -->
+      <div class="alert-banner">
+        <div class="alert-left">
+          <span class="alert-icon">⚠️</span>
+          <div class="alert-text">
+            <strong>Emergency Alert: Tirupati — Capacity Exceeded</strong>
+            <span>Current occupancy at 118% · Recommend pausing new bookings for 11 AM – 3 PM</span>
+          </div>
+        </div>
+        <button class="alert-dismiss">Acknowledge</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Bookings Today</div>
+          <div class="stat-value" style="color:var(--teal)">3,847</div>
+          <div class="stat-change change-up">↑ 14% vs yesterday</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Visitors Now</div>
+          <div class="stat-value" style="color:#EF4444">12,405</div>
+          <div class="stat-change change-up">↑ 8% this hour</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Slots Available</div>
+          <div class="stat-value" style="color:#F59E0B">1,203</div>
+          <div class="stat-change change-down">↓ 31% from open</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Cancellations</div>
+          <div class="stat-value">142</div>
+          <div class="stat-change change-down">↓ 5% vs avg</div>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <!-- Crowd Distribution -->
+        <div class="admin-card">
+          <h3>Crowd Distribution by Time <span>View full report →</span></h3>
+          <svg class="chart" viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+            <line x1="40" y1="10" x2="40" y2="130" stroke="#E8E8E8"/>
+            <line x1="40" y1="130" x2="420" y2="130" stroke="#E8E8E8"/>
+            <line x1="40" y1="40" x2="420" y2="40" stroke="#F5F5F5" stroke-dasharray="4,4"/>
+            <line x1="40" y1="80" x2="420" y2="80" stroke="#F5F5F5" stroke-dasharray="4,4"/>
+            <rect x="55" y="110" width="20" height="20" rx="2" fill="#4CAF7D" opacity=".85"/>
+            <rect x="88" y="95" width="20" height="35" rx="2" fill="#4CAF7D" opacity=".85"/>
+            <rect x="121" y="70" width="20" height="60" rx="2" fill="#F59E0B" opacity=".85"/>
+            <rect x="154" y="30" width="20" height="100" rx="2" fill="#EF4444" opacity=".85"/>
+            <rect x="187" y="18" width="20" height="112" rx="2" fill="#EF4444" opacity=".85"/>
+            <rect x="220" y="25" width="20" height="105" rx="2" fill="#EF4444" opacity=".85"/>
+            <rect x="253" y="55" width="20" height="75" rx="2" fill="#F59E0B" opacity=".85"/>
+            <rect x="286" y="40" width="20" height="90" rx="2" fill="#EF4444" opacity=".85"/>
+            <rect x="319" y="75" width="20" height="55" rx="2" fill="#F59E0B" opacity=".85"/>
+            <rect x="352" y="100" width="20" height="30" rx="2" fill="#4CAF7D" opacity=".85"/>
+            <rect x="385" y="115" width="20" height="15" rx="2" fill="#4CAF7D" opacity=".85"/>
+            <text x="65" y="148" text-anchor="middle" font-size="8" fill="#9AA">6AM</text>
+            <text x="98" y="148" text-anchor="middle" font-size="8" fill="#9AA">8AM</text>
+            <text x="131" y="148" text-anchor="middle" font-size="8" fill="#9AA">10AM</text>
+            <text x="164" y="148" text-anchor="middle" font-size="8" fill="#9AA">12PM</text>
+            <text x="197" y="148" text-anchor="middle" font-size="8" fill="#9AA">1PM</text>
+            <text x="230" y="148" text-anchor="middle" font-size="8" fill="#9AA">2PM</text>
+            <text x="263" y="148" text-anchor="middle" font-size="8" fill="#9AA">4PM</text>
+            <text x="296" y="148" text-anchor="middle" font-size="8" fill="#9AA">5PM</text>
+            <text x="329" y="148" text-anchor="middle" font-size="8" fill="#9AA">7PM</text>
+            <text x="362" y="148" text-anchor="middle" font-size="8" fill="#9AA">9PM</text>
+            <text x="395" y="148" text-anchor="middle" font-size="8" fill="#9AA">10PM</text>
+          </svg>
+        </div>
+
+        <!-- Donut -->
+        <div class="admin-card">
+          <h3>Booking Status Split</h3>
+          <div class="donut-wrap">
+            <svg width="130" height="130" viewBox="0 0 42 42">
+              <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#4CAF7D" stroke-width="6" stroke-dasharray="68 32" stroke-dashoffset="25"/>
+              <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#F59E0B" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="-43"/>
+              <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#EF4444" stroke-width="6" stroke-dasharray="12 88" stroke-dashoffset="-63"/>
+              <text x="21" y="25" text-anchor="middle" font-size="6" font-weight="bold" fill="#333">3,847</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="legend-item"><span class="legend-dot" style="background:#4CAF7D"></span><span>Confirmed &nbsp;<strong>68%</strong></span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:#F59E0B"></span><span>Pending &nbsp;<strong>20%</strong></span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:#EF4444"></span><span>Cancelled &nbsp;<strong>12%</strong></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slot Controls & Table -->
+      <div class="admin-grid">
+        <div class="admin-card">
+          <h3>Recent Bookings</h3>
+          <table class="booking-table">
+            <thead>
+              <tr><th>Booking ID</th><th>Devotee</th><th>Temple</th><th>Slot</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>#SD-48201</strong></td><td>Ramesh K.</td><td>Tirupati</td><td>9:30 PM</td><td><span class="status-pill s-confirmed">Confirmed</span></td></tr>
+              <tr><td><strong>#SD-48200</strong></td><td>Priya M.</td><td>Siddhivinayak</td><td>7:00 AM</td><td><span class="status-pill s-confirmed">Confirmed</span></td></tr>
+              <tr><td><strong>#SD-48199</strong></td><td>Arjun S.</td><td>Vaishno Devi</td><td>10:00 AM</td><td><span class="status-pill s-pending">Pending</span></td></tr>
+              <tr><td><strong>#SD-48198</strong></td><td>Kavitha R.</td><td>Golden Temple</td><td>5:30 AM</td><td><span class="status-pill s-confirmed">Confirmed</span></td></tr>
+              <tr><td><strong>#SD-48197</strong></td><td>Suresh P.</td><td>Tirupati</td><td>11:30 AM</td><td><span class="status-pill s-cancelled">Cancelled</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-card">
+          <h3>Slot Management</h3>
+          <div class="slot-controls">
+            <div class="slot-ctrl">
+              <label>Temple</label>
+              <select><option>Tirupati Balaji</option><option>Vaishno Devi</option><option>Siddhivinayak</option></select>
+            </div>
+            <div class="slot-ctrl">
+              <label>Date</label>
+              <input type="date" value="2026-02-18"/>
+            </div>
+            <div class="slot-ctrl">
+              <label>Time Slot</label>
+              <select><option>11:30 AM</option><option>10:00 AM</option><option>1:00 PM</option></select>
+            </div>
+            <div class="slot-ctrl">
+              <label>Capacity Override</label>
+              <input type="number" value="120" min="0" max="500"/>
+            </div>
+            <div class="slot-ctrl-actions">
+              <button class="btn-sm primary">Update Slot</button>
+              <button class="btn-sm danger">Block Slot</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CONFIRMATION ══════════════ -->
+<div id="confirm" class="page">
+  <div class="confirm-page">
+    <div class="confirm-card">
+      <div class="confirm-icon">🛕</div>
+      <div class="confirm-badge">✓ Booking Confirmed</div>
+      <h2>Darshan Booked!</h2>
+      <p class="booking-id">Booking ID: <strong>#SD-48202</strong> &nbsp;·&nbsp; Feb 18, 2026</p>
+
+      <div class="qr-box">
+        <div class="qr-inner"></div>
+      </div>
+      <p style="font-size:12px;color:var(--text-light);margin-top:-20px;margin-bottom:28px">Show this QR at the temple entry gate</p>
+
+      <div class="details-grid">
+        <div class="detail-item"><label>Temple</label><span>Tirupati Balaji</span></div>
+        <div class="detail-item"><label>Date</label><span>Feb 18, 2026</span></div>
+        <div class="detail-item"><label>Time Slot</label><span>9:30 PM</span></div>
+        <div class="detail-item"><label>Devotees</label><span>2 Persons</span></div>
+        <div class="detail-item"><label>Sevas Selected</label><span>Suprabhatam</span></div>
+        <div class="detail-item"><label>Crowd Level</label><span style="color:#2D7A4F">🟢 Low</span></div>
+      </div>
+
+      <div class="instructions">
+        <h4>Entry Instructions</h4>
+        <ul>
+          <li>Arrive 15 minutes before your slot time</li>
+          <li>Carry a valid government-issued photo ID</li>
+          <li>Dress code: Traditional attire required; no shorts or sleeveless</li>
+          <li>Mobile phones must be deposited at the locker rooms</li>
+          <li>QR code is valid for one-time entry only</li>
+        </ul>
+      </div>
+
+      <div class="confirm-actions">
+        <button class="btn-primary" onclick="alert('Downloading pass...')">⬇ Download Pass</button>
+        <button class="btn-sec" onclick="showPage('home',null)">← Back to Home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  if (el) el.classList.add('active');
+  window.scrollTo(0,0);
+}
+function selectTemple(el) {
+  document.querySelectorAll('.temple-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectDay(el) {
+  document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectSlot(el) {
+  document.querySelectorAll('.time-slot:not(.full)').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+</script>
+</body>
+</html>
